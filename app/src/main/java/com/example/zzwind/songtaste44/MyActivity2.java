@@ -5,18 +5,19 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
-import com.loopj.android.image.SmartImageView;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import com.google.gson.Gson;
+import com.lidroid.xutils.HttpUtils;
+import com.lidroid.xutils.exception.HttpException;
+import com.lidroid.xutils.http.ResponseInfo;
+import com.lidroid.xutils.http.callback.RequestCallBack;
+import com.lidroid.xutils.http.client.HttpRequest;
 
 
 public class MyActivity2 extends Activity {
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,44 +28,59 @@ public class MyActivity2 extends Activity {
         String[] images = new String[]{"http://image.songtaste.com/images/usericon/s/12/4160512.jpeg","http://image.songtaste.com/images/usericon/s/21/4675321.jpg","http://image.songtaste.com/images/usericon/s/61/39361.jpg","http://image.songtaste.com/images/usericon/s/70/8276770.jpg","http://image.songtaste.com/images/usericon/s/95/5263795.jpg"};
         //String[] images = new String[]{"http://www.baidu.com/img/bdlogo.png","http://www.baidu.com/img/bdlogo.png","http://www.baidu.com/img/bdlogo.png","http://www.baidu.com/img/bdlogo.png","http://www.baidu.com/img/bdlogo.png"};
         //
+        final ListView listView = (ListView)findViewById(R.id.list);
+        HttpUtils http = new HttpUtils();
+        http.send(HttpRequest.HttpMethod.GET,
+                "http://songtaste.com/api/android/rec_list.php?p=1&n=20&tmp=0.13986661564558744",
+                new RequestCallBack<String>() {
+
+
+                    @Override
+                    public void onSuccess(ResponseInfo<String> responseInfo) {
+                        Gson gson = new Gson();
+                        MusicResult music = gson.fromJson(responseInfo.result,MusicResult.class);
+                         listView.setAdapter(new ImgAdapter(MyActivity2.this,music.getData()));
+                    }
+
+                    @Override
+                    public void onFailure(HttpException error, String msg) {
+                        Toast.makeText(MyActivity2.this, "onFailure",
+                                Toast.LENGTH_SHORT).show();
+                        Log.i("zz","onFailure");
+                    }
+                });
+
+//        try {
+//            JSONObject jsonObject = new JSONObject();
+//            Log.i("zz",jsonObject.getInt("code") + "");
+//            JSONArray jsonArray = jsonObject.getJSONArray("data");
+//            for(int i=0;i<jsonArray.length();i++)
+//            {
+//                Log.i("zz",jsonArray.get(i) + "");
+//            }
+//
+//        }catch (JSONException e)
+//        {
+//            Log.i("zz","error");
+//        }
+
+
 
 
 //http://image.songtaste.com/images/usericon/s/12/4160512.jpeg
 
-        List<HashMap<String,Object>> data = new ArrayList<HashMap<String, Object>>();
-        for(int i =0; i < 5; i++){
-            HashMap<String,Object> map = new HashMap<String, Object>();
-            map.put("ItemImage", images[i]);
-            map.put("ItemTitle", "This is Title" + i);
-            map.put("ItemText", "This is text" + i);
-            data.add(map);
-        }
-
-        ListView listView = (ListView)findViewById(R.id.list);
 
 
 
 
-        String[] from = new String[]{"ItemImage","ItemTitle","ItemText"};
 
-        int[] to = new int[] { R.id.ItemImage,R.id.ItemTitle, R.id.ItemText };
 
-        SimpleAdapter adapter = new SimpleAdapter(this,data,R.layout.list_item2,from,to);
 
-        adapter.setViewBinder(new SimpleAdapter.ViewBinder() {
-            @Override
-            public boolean setViewValue(View view, Object data, String textRepresentation) {
-                if(view instanceof SmartImageView){
-                    ((SmartImageView)view).setImageUrl(data.toString());
-                    Log.e("zzz",data.toString());
 
-                    return true;
-                }
-                return false;
-            }
-        });
 
-        listView.setAdapter(adapter);
+
+
+
 
     }
 
@@ -88,3 +104,5 @@ public class MyActivity2 extends Activity {
         return super.onOptionsItemSelected(item);
     }
 }
+
+
